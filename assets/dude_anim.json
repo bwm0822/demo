@@ -1,0 +1,40 @@
+{
+    "anims": [
+        {
+            "key": "dude_walk",
+            "type": "frames",
+            "repeat": -1,
+            "frameRate": 12,
+            "frames": [
+                {
+                    "key": "dude",
+                    "frame": "dual_walk_1"
+                },
+                {
+                    "key": "dude",
+                    "frame": "dual_walk_2"
+                },
+                {
+                    "key": "dude",
+                    "frame": "dual_walk_3"
+                },
+                {
+                    "key": "dude",
+                    "frame": "dual_walk_4"
+                }
+            ]
+        },
+        {
+            "key": "dude_idle",
+            "type": "frames",
+            "repeat": -1,
+            "frameRate": 12,
+            "frames": [
+                {
+                    "key": "dude",
+                    "frame": "dual_idle"
+                }
+            ]
+        }
+    ]
+}
