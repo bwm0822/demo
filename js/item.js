@@ -8,7 +8,7 @@ class ItemDrop extends Phaser.GameObjects.Container
         this.scene = scene;
         let data = ItemDB.get(id);
         this.setDataEnabled();
-        this.data.set({'id':id, 'count':count});
+        this.data.set({'id':id, 'count':count, 'name':data.name});
         let [atlas, frame] = data.icon.split('/'); 
         this.sprite = scene.add.sprite(0,0,atlas,frame)
         this.add([this.sprite]);
@@ -17,7 +17,7 @@ class ItemDrop extends Phaser.GameObjects.Container
         scene.interactables.add(this);
         scene.gameLayer.add(this);
         
-        this.setInteractive().on('pointerdown', () => {this.pickup();});
+        this.setInteractive().on('pointerup', () => {this.onpointerup();});
         this.updateDepth();
     }
 
@@ -39,16 +39,11 @@ class ItemDrop extends Phaser.GameObjects.Container
         //this.debug(depth.toFixed(1));
     }
 
-    pickup()
+    onpointerup()
     {
-        let dist = Phaser.Math.Distance.BetweenPoints(this.scene.role, this);
-        //console.log(dist);
-        if(dist < 50)
-        {
-            Bag.add(this.data.get('id'), this.data.get('count'));
-            this.destroy();
-        }
+        if(this.scene.player){this.scene.player.pickup(this);}
     }
+
 }
 
 

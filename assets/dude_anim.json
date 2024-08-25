@@ -8,19 +8,19 @@
             "frames": [
                 {
                     "key": "dude",
-                    "frame": "dual_walk_1"
+                    "frame": "dude_walk_1"
                 },
                 {
                     "key": "dude",
-                    "frame": "dual_walk_2"
+                    "frame": "dude_walk_2"
                 },
                 {
                     "key": "dude",
-                    "frame": "dual_walk_3"
+                    "frame": "dude_walk_3"
                 },
                 {
                     "key": "dude",
-                    "frame": "dual_walk_4"
+                    "frame": "dude_walk_4"
                 }
             ]
         },
@@ -32,7 +32,7 @@
             "frames": [
                 {
                     "key": "dude",
-                    "frame": "dual_idle"
+                    "frame": "dude_idle"
                 }
             ]
         }

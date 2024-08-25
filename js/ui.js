@@ -4,10 +4,15 @@ class UIBase
     static layer = null;
     constructor(scene)
     {
-        if(!UIBase.layer) {UIBase.layer = scene.add.layer(); UIBase.layer.name = 'uiLayer';}
+        if(!UIBase.layer) 
+        {
+            UIBase.layer = scene.add.layer(); 
+            UIBase.layer.name = 'uiLayer';
+        }
         this.x = game.config.width/2;
         this.y = game.config.height/2;
         this.scene = scene;
+        this.root = null;
     }
 
     text(text='', fontSize=24, fontFamily=FONT, other={})    
@@ -15,21 +20,100 @@ class UIBase
         return this.scene.add.text(0,0,text,{fontSize:fontSize,fontFamily:fontFamily,...other});
     }
 
-    rect(color=COLOR_PRIMARY, radius=10)
+    rect(color=COLOR_PRIMARY, radius=10, alpha=1)
     {
-        return this.scene.rexUI.add.roundRectangle(0,0,0,0,radius,color);
+        return this.scene.rexUI.add.roundRectangle(0,0,0,0,radius,color,alpha);
     }
 
-    sprite(atlas, frame)
+    sprite(atlas, frame, name)
     {
-        return this.scene.add.sprite(0,0,atlas,frame);
+        let sprite = this.scene.add.sprite(0,0,atlas,frame);
+        if(name) {sprite.name=name;}
+        return sprite;
+        //return this.scene.add.sprite(0,0,atlas,frame);
     }
 
-    addLayer(layer)
+    getLayer()
     {
-        UIBase.layer.add(layer);
+        return this.root.getLayer();
+    }
+
+    addLayer()
+    {
+        UIBase.layer.add(this.root.getLayer());
+    }
+
+}
+
+class UIMain extends UIBase
+{
+    static instance = null;
+    constructor(scene)
+    {
+        super(scene);
+        UIMain.instance = this;
+        this.root = scene.rexUI.add.overlapSizer({space:0})
+            .addBackground(this.rect(0, 0, 0))
+            .add(this.createBar(),{align:'left-top',expand:{width:true}})
+            .layout()//.drawBounds(this.scene.add.graphics(), 0xff0000);
+        
+        this.onResize();
+        //scene.scale.on('resize', this.onResize, this);
+        this.addLayer();
+    }
+
+    onResize()
+    {
+        let viewport = this.scene.rexUI.viewport;
+        this.root.setPosition(viewport.centerX, viewport.centerY)
+                .setMinSize(viewport.width, viewport.height)
+                .layout()
+    }
+
+    createBar()
+    {
+        let bar = this.scene.rexUI.add.sizer(0,0,0,0,{orientation: 'x'})
+                    .addBackground(this.rect(0xffffff, 0, 0.25))
+                    .add(this.scene.rexUI.add.buttons({
+                        buttons:[this.sprite('iconPack','iconPack_27', 'info'),
+                                this.sprite('iconPack','iconPack_161', 'bag')],
+                        }),{proportion: 1,key:'group_1'})
+                    .add(this.scene.rexUI.add.buttons({
+                        buttons:[this.sprite('iconPack','iconPack_123')],
+                        }),{proportion: 0,key:'group_2'})
+                    .layout()
+
+        bar.getElement('group_1').on('button.click', (button, index, pointer, event)=>{
+            switch(button.name)
+            {
+                case 'info': break;
+                case 'bag': UIBag.show(); break;
+            }
+        })
+        .on('button.down', (button)=>{button.setAlpha(0.5);})
+        .on('button.up', (button)=>{button.setAlpha(1);})
+        //.on('button.out', function (button) {button.setAlpha(1);});
+
+        bar.getElement('group_2').on('button.click', (button, index, pointer, event)=>{
+            if(this.scene.scale.isFullscreen)
+            {
+                button.setFrame('iconPack_123');
+                this.scene.scale.stopFullscreen();
+            }
+            else
+            {
+                button.setFrame('iconPack_3');
+                this.scene.scale.startFullscreen();
+            }
+        })
+        .on('button.down', (button)=>{button.setAlpha(0.5);})
+        .on('button.up', (button)=>{button.setAlpha(1);})
+
+        return bar;
+
     }
 }
+
 
 class UIBag extends UIBase
 {
@@ -46,7 +130,7 @@ class UIBag extends UIBase
             .layout()//.drawBounds(this.scene.add.graphics(), 0xff0000);
 
         this.hide();
-        this.addLayer(this.getLayer());
+        this.addLayer();
     }
 
     createHeader()
@@ -163,23 +247,6 @@ class UIBag extends UIBase
         if(this.root.visible){this.show();}
     }
 
-    disable()
-    {
-        //this.root.disableInteractive();
-        this.scroll.setScrollerEnable(false);
-    }
-
-    enable()
-    {
-        //this.root.disableInteractive();
-        this.scroll.setScrollerEnable(true);
-    }
-
-    getLayer()
-    {
-        return this.root.getLayer();
-    }
-
     static show()
     {
         if(UIBag.instance) {UIBag.instance.show();}
@@ -188,21 +255,6 @@ class UIBag extends UIBase
     static hide()
     {
         if(UIBag.instance) {UIBag.instance.hide();}
-    }
-
-    static getLayer()
-    {
-        if(UIBag.instance) {return UIBag.instance.getLayer();}
-    }
-
-    static disable()
-    {
-        if(UIBag.instance) {UIBag.instance.disable();}
-    }
-
-    static enable()
-    {
-        if(UIBag.instance) {UIBag.instance.enable();}
     }
 
     static refresh()
@@ -229,8 +281,8 @@ class UIItem extends UIBase
             //.setChildrenInteractive();  // 阻斷click事件傳遞到下層UI
         this.hide();
 
-        this.addLayer(this.getLayer());
         this.item;
+        this.addLayer();
     }
 
     hide()
@@ -259,13 +311,6 @@ class UIItem extends UIBase
         });
     }
 
-    // createIcon(scene)
-    // {
-    //     return scene.rexUI.add.overlapSizer(0,0,200,100)
-    //             .addBackground(this.rect(scene, COLOR_LIGHT, 0))
-    //             .add(scene.add.sprite(0,0,0,0),{aspectRatio:true, key:'texture'});
-    // }
-
     createIcon()
     {
         return this.scene.rexUI.add.badgeLabel({
@@ -282,24 +327,7 @@ class UIItem extends UIBase
 
     createDescript()
     {
-        // let panel = this.scene.rexUI.add.scrollablePanel({
-        //     x: 0,
-        //     y: 0,
-        //     //width: undefined,
-        //     height: 100,
-        //     scrollMode: 'y',
-        //     background: this.rect(COLOR_DARK, 0),
-        //     panel: {child: this.scene.rexUI.wrapExpandText(this.text('',16))},
-        //     //expandTextWidth: false,
-        //     space: {left:5, right:5, top:5, bottom:5, panel:0},
-        //     slider: {
-        //         track: this.rect(COLOR_PRIMARY,5),
-        //         thumb: this.rect(COLOR_LIGHT, 5),
-        //         // position: 'left'
-        //     },
-        // });
-
-        let panel = this.scene.rexUI.add.textArea({
+        return this.scene.rexUI.add.textArea({
             x: 0,
             y: 0,
             //width: undefined,
@@ -316,21 +344,6 @@ class UIItem extends UIBase
             },
             //content:'test',
         });
-
-        //panel.setInteractive();
-
-        //panel.setScrollerEnable(false);
-
-        // panel.on('scroll', function(panel) {
-        //     console.log('scroll',panel);
-        // })
-
-        // panel.setInteractive()
-        // .on('pointerdown', function (pointer, x, y, event) {console.log('down'); event.stopPropagation(); })
-        // .on('pointerup', function () {console.log('up')})
-        // .on('pointermove', function () {console.log('move')});
-        
-        return panel;
     }
 
     createAction()
@@ -369,7 +382,7 @@ class UIItem extends UIBase
             {
                 cnt = await UICount.show(1,this.item.count,1);
             }
-            Player.dropItem(this.item.id, cnt);
+            Player.drop(this.item.id, cnt);
             UIBag.refresh();
             this.hide();
         }
@@ -379,10 +392,6 @@ class UIItem extends UIBase
         }
     }
 
-    getLayer()
-    {
-        return this.root.getLayer();
-    }
 
     show(item)
     {
@@ -401,13 +410,11 @@ class UIItem extends UIBase
         this.root.setInteractive();
 
         this.scene.children.bringToTop(this.getLayer());
-        //UIBag.disable();
     }
 
     hide()
     {
         this.root.hide();
-        //UIBag.enable();
     }
 
     static show(item)
@@ -418,11 +425,6 @@ class UIItem extends UIBase
     static hide()
     {
         if(UIItem.instance) {UIItem.instance.hide();}
-    }
-
-    static getLayer()
-    {
-        if(UIItem.instance) {return UIItem.instance.getLayer();}
     }
 }
 
@@ -446,7 +448,7 @@ class UICount extends UIBase
             .layout()//.drawBounds(this.scene.add.graphics(), 0xff0000);
 
         this.hide();
-        this.addLayer(this.getLayer());
+        this.addLayer();
     }
 
     label()
@@ -503,11 +505,6 @@ class UICount extends UIBase
         return act;
     }
 
-    getLayer()
-    {
-        return this.root.getLayer();
-    }
-
     show(min,max,step)
     {
         let slider = this.root.getElement('slider',true);
@@ -535,5 +532,41 @@ class UICount extends UIBase
     static show(min,max,step)
     {
         if(UICount.instance) {return UICount.instance.show(min,max,step);}
+    }
+}
+
+class UIMessage extends UIBase
+{
+    static instance = null;
+    constructor(scene)
+    {
+        super(scene);
+        UIMessage.instance = this;
+        this.root = scene.rexUI.add.toast({
+            x: this.x,
+            y: this.y*2,
+    
+            background: this.rect(0, 10, 0.5),
+            text: this.text(),
+            space: 10,
+    
+            duration: {
+                in: 250,
+                hold: 1000,
+                out: 250,
+            },
+        }).setOrigin(0.5, 1);
+
+        this.addLayer();
+    }
+
+    show(text)
+    {
+        this.root.showMessage(text).bringToTop();
+    }
+
+    static show(text)
+    {
+        if(UIMessage.instance) {UIMessage.instance.show(text);}
     }
 }

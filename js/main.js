@@ -3,6 +3,15 @@ const COLOR_LIGHT = 0x7b5e57;
 const COLOR_DARK = 0x260e04;
 const FONT = "arial";
 
+
+class test
+{
+    constructor(x)
+    {
+        console.log('test',x);    
+    }
+}
+
 class Main extends Phaser.Scene
 {    
     constructor()
@@ -48,70 +57,46 @@ class Main extends Phaser.Scene
 
     create()
     {
-
-
+        this.createUI();
         this.createMap();
 
         this.gameLayer = this.add.layer();
         this.gameLayer.name = 'gameLayer';
         
-
         this.createInteractable();
-
-        //new Role(this, 'dude', 100, 100);
-        this.role = new Player(this, 'dude', 300, 300);
-        this.physics.add.collider(this.role, this.mapCol);
-
-        // this.add.sprite(100, 300, 'itemPack','itempack_1').setInteractive()
-        // .on('pointerdown', () => {console.log('itempack_1')})
-        // .on('pointerover', () => {console.log('over')})
-        //this.gameLayer.add([this.role]);
-        this.createUI();
-        console.log(this.gameLayer);
-
+        this.createPlayer();
+        
         this.graphics = this.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xff00ff } });
-
+        this.createUICam();
     }
 
     update()
     {
         this.graphics.clear();
-        this.role.update();
+        if(this.player){this.player.update();}
+    }
+
+    createUICam()
+    {
+        this.uiCam = this.cameras.add(0, 0, game.config.width, game.config.height).setName('ui');
+        this.uiCam.ignore(this.scene.scene.children.list.filter(layer => layer !== UIBase.layer));
+    }
+
+    createPlayer()
+    {
+        this.player = new Player(this, 'dude', 300, 300);
+        this.physics.add.collider(this.player, this.mapCol);
+        this.cameras.main.startFollow(this.player);
+        this.cameras.main.ignore(UIBase.layer);
     }
 
     createUI()
     {
-
+        new UIMain(this);
         new UIBag(this, 60, 0);
         new UIItem(this, 200, 200);
         new UICount(this, 200, 200);
-
-        const btn = this.add.sprite(0,0,'iconPack','iconPack_123').setOrigin(0,0).setInteractive();
-        btn.on('pointerup', ()=>{
-            if(this.scale.isFullscreen)
-            {
-                btn.setFrame('iconPack_123').setOrigin(0,0);
-                this.scale.stopFullscreen();
-            }
-            else
-            {
-                btn.setFrame('iconPack_3').setOrigin(0,0);
-                this.scale.startFullscreen();
-            }
-        });
-
-
-
-        this.rexUI.add.roundRectangle(100,0,100,50,10,0x003c8f).setOrigin(0,0).setInteractive()
-        .on('pointerdown', () => {
-            //scroll.add([{icon:'itemPack/itempack_1',count:2}]);
-            UIBag.show();
-            //UIItem.show(Bag.items[0]);
-            //UICount.show(1,5,1);
-        });
-
-        //this.children.bringToTop(this.uiLayer);
-        
+        new UIMessage(this, 200, 200);        
     }
 
     createMap()
