@@ -63,17 +63,30 @@ class Main extends Phaser.Scene
         this.gameLayer = this.add.layer();
         this.gameLayer.name = 'gameLayer';
         
-        this.createInteractable();
+        this.createItems();
         this.createPlayer();
+
         
         this.graphics = this.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xff00ff } });
         this.createUICam();
+
+        // let container = this.add.container(0,0);
+        // let rect = this.add.rectangle(0,0,50,10,0x005500);
+        // //container.setSize(10,10);
+
+        // //this.gameLayer.add(container);
+
+        // container.add(rect);
+        // //container.setSize(100,100);
+        // this.physics.add.existing(container);
+        // container.body.setCircle(5, 0, 0);
     }
 
     update()
     {
         this.graphics.clear();
         if(this.player){this.player.update();}
+        //if(this.gun){this.gun.aim();}
     }
 
     createUICam()
@@ -85,9 +98,11 @@ class Main extends Phaser.Scene
     createPlayer()
     {
         this.player = new Player(this, 'dude', 300, 300);
-        this.physics.add.collider(this.player, this.mapCol);
+        let col = this.physics.add.collider(this.player, this.mapCol);
+        this.physics.world.removeCollider(col);
+        this.physics.world.addCollider(this.player, this.mapCol);
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.ignore(UIBase.layer);
+        this.cameras.main.ignore([UIBase.layer]);
     }
 
     createUI()
@@ -135,11 +150,15 @@ class Main extends Phaser.Scene
         })
     }
 
-    createInteractable()
+    createItems()
     {
+
         this.interactables = this.physics.add.group();
-        new ItemDrop(this, 'bomb', 400, 300);
-        new ItemDrop(this, 'itempack_0', 400, 200);
+        let item1 = new ItemDrop(this, 'bomb', 400, 300);
+        let item2 = new ItemDrop(this, 'itempack_0', 400, 200);
+        //this.gun = new Gun(this, 200, 200);
+
+        //container.add([item1, item2]);
     }
 
 

@@ -57,37 +57,64 @@ class Role extends Phaser.GameObjects.Container
     {
         this.hp = new Bar(scene, -this.width/2, -this.height/2, this.width, 5);
         this.add(this.hp);
-
-
     }
 
-    // hp()
+    // updateAnim(vx,vy)
     // {
-    //     this.hbar.displayWidth = this.hp_w * this.data.values.hp / this.data.values.hpmax;
+    //     let anim = this.data.values.anim;
+    //     if (vx>0)
+    //     {
+    //         this.sprite.flipX = false;
+    //         this.sprite.anims.play(anim.walk, true);
+    //     }
+    //     else if (vx<0)
+    //     {
+    //         this.sprite.flipX = true;
+    //         this.sprite.anims.play(anim.walk, true);
+    //     }
+    //     else if (vy<0)
+    //     {
+    //         this.sprite.flipX = false;
+    //         this.sprite.anims.play(anim.idle);
+    //     }
+    //     else if (vy>0)
+    //     {
+    //         this.sprite.flipX = false;
+    //         this.sprite.anims.play(anim.idle);
+    //     }
     // }
 
-    updateAnim(vx,vy)
+    updateAnim(vx,vy,dir)
     {
+        //console.log(vx,vy,dir);
         let anim = this.data.values.anim;
-        if (vx>0)
-        {
-            this.sprite.flipX = false;
-            this.sprite.anims.play(anim.walk, true);
-        }
-        else if (vx<0)
+        if (dir=='left')
         {
             this.sprite.flipX = true;
-            this.sprite.anims.play(anim.walk, true);
+            if(vx > 0){this.sprite.anims.play(anim.forwardRight, true);}
+            else if(vx < 0){this.sprite.anims.play(anim.backwardRight, true);}
+            else {this.sprite.anims.play(anim.idleRight);}
         }
-        else if (vy<0)
+        else if (dir=='right')
         {
             this.sprite.flipX = false;
-            this.sprite.anims.play(anim.idle);
+            if(vx > 0){this.sprite.anims.play(anim.forwardRight, true);}
+            else if(vx < 0){this.sprite.anims.play(anim.backwardRight, true);}
+            else {this.sprite.anims.play(anim.idleRight);}
         }
-        else if (vy>=0)
+        else if (dir=='up')
         {
             this.sprite.flipX = false;
-            this.sprite.anims.play(anim.idle);
+            if(vy > 0){this.sprite.anims.play(anim.forwardUp, true);}
+            else if(vy < 0){this.sprite.anims.play(anim.backwardUp, true);}
+            else {this.sprite.anims.play(anim.idleUp);}
+        }
+        else if (dir=='down')
+        {
+            this.sprite.flipX = false;
+            if(vy > 0){this.sprite.anims.play(anim.forwardDown, true);}
+            else if(vy < 0){this.sprite.anims.play(anim.backwardDown, true);}
+            else {this.sprite.anims.play(anim.idleDown);}
         }
     }
 
@@ -106,9 +133,6 @@ class Role extends Phaser.GameObjects.Container
         let circle = new Phaser.Geom.Circle(this.x, this.y, 50);
         this.scene.graphics.strokeCircleShape(circle);
     }
-
-
-
 }
 
 
@@ -129,13 +153,30 @@ class Player extends Role
         this.data.events.on('changedata-hp', ()=>{
             this.hp.set(this.data.values.hp/this.data.values.hpmax);
         });
+
+        this.weapon = new Gun(scene, 5, 10);
+        this.add(this.weapon);
+        this.dir='down';
     }
 
     update()
     {
+        this.getDir();
+
         this.ctrl();
         this.updateDepth();
         this.debugDraw();
+
+        if(this.weapon)
+        {
+            this.weapon.aim(this.getPoint());
+            //console.log(Math.abs(this.weapon.rotation), Phaser.Math.TAU);
+            if(this.scene.input.activePointer.isDown)
+            {
+                this.weapon.shoot(this.getPoint());
+            }
+        }
+
     }
 
     damage(dmg)
@@ -163,6 +204,11 @@ class Player extends Role
         else if (vx<0){this.rect.x=-20;this.rect.y=0;}
         else if (vy<0){this.rect.x=0;this.rect.y=-20;}
         else if (vy>0){this.rect.x=0;this.rect.y=20;}
+
+        if(this.dir == 'left'){this.weapon.setPosition(-5, 10);}
+        else if(this.dir == 'right'){this.weapon.setPosition(5, 10);}
+        else if(this.dir == 'up'){this.weapon.setPosition(0, -5);}
+        else if(this.dir == 'down'){this.weapon.setPosition(0,5);}
     }
 
     enableCtrl(scene)
@@ -197,7 +243,7 @@ class Player extends Role
         this.body.setVelocity(vx,vy);
 
         this.updateDetect(vx,vy);
-        this.updateAnim(vx,vy);
+        this.updateAnim(vx,vy,this.dir);
     }
 
     drop(id, count)
@@ -221,8 +267,35 @@ class Player extends Role
             UIMessage.show(`撿起 ${item.data.get('count')} ${item.data.get('name')}`);
             item.destroy();
         }
+    }
 
-        
+    getPoint()
+    {
+        let x = this.scene.input.activePointer.worldX;
+        let y = this.scene.input.activePointer.worldY;
+        return {x:x, y:y};
+    }
+
+    getDir(x,y)
+    {
+        if(this.weapon)
+        {
+            if(Math.abs(this.weapon.rotation) > Phaser.Math.TAU)
+            {
+                this.dir = 'left';
+            }
+            else
+            {
+                this.dir = 'right';
+            }
+        }
+        else
+        {
+            if(x>0){this.dir = 'right';}
+            else if(x<0){this.dir = 'left';}
+            else if(y<0){this.dir = 'up';}
+            else if(y>0){this.dir = 'down';}
+        }
     }
 
     

@@ -54,7 +54,11 @@ class Bag
 class RoleDB
 {
     static data = {
-        'dude':{name:'dude', icon:'dude/dude_idle', prop:{life:100}, descript:'', anim:{idle:'dude_idle', walk:'dude_walk'}},
+        'dude':{name:'dude', icon:'dude/dude_idle', prop:{life:100}, descript:'', 
+                anim:{idleRight:'dude_idleRight', forwardRight:'dude_walk',backwardRight:'dude_walk',
+                        idleUp:'dude_idle', forwardUp:'dude_idle',backwardUp:'dude_idle',
+                        idleDown:'dude_idle', forwardDown:'dude_idle',backwardDown:'dude_idle'}
+            },
     };
 
     static get(id)
